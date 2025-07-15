@@ -1,0 +1,12 @@
+[package]
+name = "shell"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "0-shell"
+path = "main.rs"
+
+[dependencies]
+colored = "2.2.0"
+dirs = "4.0.0"
