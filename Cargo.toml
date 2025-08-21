@@ -9,4 +9,5 @@ path = "main.rs"
 
 [dependencies]
 colored = "2.2.0"
+ctrlc = "3.4.7"
 dirs = "4.0.0"
