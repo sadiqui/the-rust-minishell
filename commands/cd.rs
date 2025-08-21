@@ -11,7 +11,7 @@ pub fn cd(args: &[&str]) -> io::Result<()> {
         std::path::PathBuf::from(args[0])
     };
 
-    // Avoid transient “not found” errors caused by weird I/O timing
+    // Handle non-existent and non-directory paths
     if !path.exists() || !path.is_dir() {
         return Err(
             Error::new(

@@ -20,12 +20,13 @@ impl MiniShell {
         let mut command_map = HashMap::new();
 
         // Explicit type casting for consistent function pointer types
-        command_map.insert("help", commands::help as CommandFn);
         command_map.insert("cd", commands::cd as CommandFn);
-        command_map.insert("echo", commands::echo as CommandFn);
         command_map.insert("pwd", commands::pwd as CommandFn);
-        command_map.insert("clear", commands::clear as CommandFn);
         command_map.insert("cat", commands::cat as CommandFn);
+        command_map.insert("cp", commands::cp as CommandFn);
+        command_map.insert("echo", commands::echo as CommandFn);
+        command_map.insert("clear", commands::clear as CommandFn);
+        command_map.insert("help", commands::help as CommandFn);
         command_map.insert("exit", (|_| Ok(())) as CommandFn); // Inline closure
 
         Self { command_map, should_exit: false }

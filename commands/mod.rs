@@ -1,9 +1,11 @@
 pub mod cat;
 pub mod cd;
+pub mod cp;
 pub mod help;
 
 pub use cat::*;
 pub use cd::*;
+pub use cp::*;
 pub use help::*;
 
 use std::io::{ self, Write };

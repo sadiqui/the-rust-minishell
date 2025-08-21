@@ -25,7 +25,9 @@ minishell/
 1. Clone the repository:
 ```bash
 git clone https://github.com/sadiqui/the-rust-minishell.git
+# or git clone https://learn.zone01oujda.ma/git/asadiqui/0-shell
 cd the-rust-minishell
+# or cd 0-shell
 ```
 
 2. Build and run:
@@ -35,17 +37,20 @@ cargo run
 
 ## Available Commands
 
-- `cd` - Change directory
-- `echo` - Print text
+- `cd [dir]` - Change directory
 - `pwd` - Show current directory
+- `cat [file]` - Display file contents
+- `cp [src] [dst]` - Copy file from src to dst
+- `echo [text]` - Print text
 - `clear` - Clear screen
-- `help` - Show available commands
-- `exit` - Quit the shell
+- `help` - Show commands
+- `exit` - Exit shell
 
 ## Dependencies
 
 - Rust 1.75+
 - `colored` (for colored output)
+- `ctrlc` (for Ctrl+C handling)
 - `dirs` (for home directory detection)
 
 ## License
