@@ -1,0 +1,10 @@
+https://broman.dev/download/The%20Linux%20Programming%20Interface.pdf
+https://medium.com/@santiagobedoa/coding-a-shell-using-c-1ea939f10e7e
+https://en.wikipedia.org/wiki/Lexical_analysis
+https://medium.com/@avocadi/creating-my-own-shell-for-fun-635ea0d3f7b7
+https://www.tutorialspoint.com/unix/unix-file-permission.htm
+https://medium.com/basecs/leveling-up-ones-parsing-game-with-asts-d7a6fc2400ff
+https://www.gnu.org/software/bash/manual/html_node/Job-Control-Basics.html
+https://stackoverflow.com/questions/13104460/confusion-about-raw-vs-cooked-terminal-modes
+https://docs.rs/crossterm/latest/crossterm/
+https://docs.rs/termion/latest/termion/
