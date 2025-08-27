@@ -25,3 +25,5 @@ pub fn cd(args: &[&str]) -> io::Result<()> {
     env::set_current_dir(path)?;
     Ok(())
 }
+
+// todo: handle "cd -"

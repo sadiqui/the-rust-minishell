@@ -2,11 +2,13 @@ pub mod cat;
 pub mod cd;
 pub mod cp;
 pub mod help;
+pub mod ls;
 
 pub use cat::*;
 pub use cd::*;
 pub use cp::*;
 pub use help::*;
+pub use ls::*;
 
 use std::io::{ self, Write };
 use std::env;
