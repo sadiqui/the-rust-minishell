@@ -1,5 +1,4 @@
 use std::io::{ self };
-use std::env;
 use std::fs;
 use colored::Colorize;
 use std::path::Path;
@@ -7,49 +6,27 @@ use std::path::Path;
 
 // fs::exists(path)
 pub fn ls(args: &[&str]) -> io::Result<()> {
-    let mut res = Vec::new();
-    let mut paths: Vec<String> = vec![];
+    let mut paths = Vec::new();
     let mut flg = Flags::new();
-    parse(args, &mut flg, &mut paths)?;
-    
-    
-    // put this block of logic in a func
-        let current_dir = env::current_dir()?;
-        match fs::read_dir(current_dir) {
-            Ok(entries) => {
-                for entry in entries {
-                    match entry {
-                        Ok(entry) => {
-                            dbg!(&entry);
-                            let file_name = entry.file_name();
-                            if !file_name.to_string_lossy().starts_with('.') {
-                                if entry.file_type()?.is_dir() {
-                                    res.push(file_name.to_string_lossy().blue().bold());
-                                } else if entry.file_type()?.is_file() {
-                                    res.push(file_name.to_string_lossy().white());
-                                } else {
-                                    res.push(file_name.to_string_lossy().green().bold());
-                                }
-                            }
-                        }
-                        Err(e) => eprintln!("Error reading entry: {}", e),
-                    }
-                }
-                // print here
-                for f in res {
-                    print!("{} ", f);
-                }
-                println!();
-            }
-            Err(e) => eprintln!("Error reading directory: {}", e),
-        
-    } // ends here
 
-    
+    parse(args, &mut flg, &mut paths)?;
+
+    if paths.is_empty() {
+        paths.push(".".to_string());
+    }
+
+    for p in paths {
+        let res = read_and_format_dir(Path::new(&p), &flg)?;
+        for f in res {
+            print!("{} ", f);
+        }
+        println!();
+    }
 
     Ok(())
 }
 
+#[allow(non_snake_case)]
 struct Flags {
     a: bool,
     t: bool,
@@ -66,16 +43,17 @@ impl Flags {
 fn parse(args: &[&str], flg: &mut Flags, paths: &mut Vec<String>) -> io::Result<()> {
     for arg in args {
         if arg.starts_with('-') {
-            let arg_flags = arg.trim_ascii_start();
+            let arg_flags = arg.trim_start_matches('-');
+            // dbg!(&arg_flags);
             for f in arg_flags.chars() {
                 if f == 't' {
                     flg.t = true;
                 } else if f == 'F' {
                     flg.F = true;
                 } else if f == 'l' {
-                    flg.a = true;
-                } else if f == 'a' {
                     flg.l = true;
+                } else if f == 'a' {
+                    flg.a = true;
                 } else {
                     eprintln!("error invalid flag {}", f); // i'll write something better later
                 }
@@ -86,10 +64,10 @@ fn parse(args: &[&str], flg: &mut Flags, paths: &mut Vec<String>) -> io::Result<
                     if metadata.is_dir() {
                         paths.push(arg.to_owned().to_string());
                     } else {
-                        eprintln!("{} is not a dir", arg); 
+                        eprintln!("{} is not a dir", arg);
                     }
-                },
-                Err(_) => eprintln!("error invalid path" ), // Path does not exist or an error occurred accessing metadata
+                }
+                Err(_) => eprintln!("error invalid path"), // Path does not exist or an error occurred accessing metadata
             }
         }
     }
@@ -97,6 +75,57 @@ fn parse(args: &[&str], flg: &mut Flags, paths: &mut Vec<String>) -> io::Result<
     Ok(())
 }
 
+fn read_and_format_dir(path: &Path, flg: &Flags) -> io::Result<Vec<String>> {
+    let mut res = Vec::new();
+    // dbg!(&flg.l);
+    match fs::read_dir(path) {
+        Ok(entries) => {
+            for entry in entries {
+                match entry {
+                    Ok(entry) => {
+                        let file_name = entry.file_name();
+                        // here if -l
 
-// if starts with "-" => flag
-// else check if path is valid
+                        // respect `-a` flag
+                        if !flg.a && file_name.to_string_lossy().starts_with('.') {
+                            continue;
+                        }
+                        let styled = if entry.file_type()?.is_dir() {
+                            file_name.to_string_lossy().blue().bold().to_string()
+                        } else if entry.file_type()?.is_file() {
+                            file_name.to_string_lossy().white().to_string()
+                        } else {
+                            file_name.to_string_lossy().green().bold().to_string()
+                        };
+                        if flg.l { // todo: finish this shit
+                            let metadata = entry.metadata()?;
+                            let size = metadata.len();
+                            let modified = metadata.modified()?;
+                            let modified_time: chrono::DateTime<chrono::Local> = modified.into();
+
+                            use std::os::unix::fs::PermissionsExt;
+                            let perms = metadata.permissions();
+                            let mode = perms.mode();
+
+                            // format the "long listing" line
+                            let line = format!(
+                                "{:o} {:>8} {} {}",
+                                mode & 0o777, // octal perms
+                                size, // file size
+                                modified_time.format("%Y-%m-%d %H:%M"), // timestamp
+                                styled // colored filename
+                            );
+                            res.push(line);
+                        } else {
+                            res.push(styled);
+                        }
+                    }
+                    Err(e) => eprintln!("Error reading entry: {}", e),
+                }
+            }
+        }
+        Err(e) => eprintln!("Error reading directory {}: {}", path.display(), e),
+    }
+
+    Ok(res)
+}
