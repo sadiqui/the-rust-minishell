@@ -46,7 +46,6 @@ fn parse(args: &[&str], flg: &mut Flags, paths: &mut Vec<String>) -> io::Result<
     for arg in args {
         if arg.starts_with('-') {
             let arg_flags = arg.trim_start_matches('-');
-            // dbg!(&arg_flags);
             for f in arg_flags.chars() {
                 if f == 't' {
                     flg.t = true;
@@ -57,7 +56,9 @@ fn parse(args: &[&str], flg: &mut Flags, paths: &mut Vec<String>) -> io::Result<
                 } else if f == 'a' {
                     flg.a = true;
                 } else {
-                    eprintln!("error invalid flag {}", f); // i'll write something better later
+                    return Err(
+                        io::Error::new(io::ErrorKind::InvalidInput, format!("invalid flag: {}", f))
+                    );
                 }
             }
         } else {
@@ -130,8 +131,6 @@ use std::fs::Metadata;
 use std::os::unix::fs::MetadataExt;
 use chrono::{ DateTime, Local };
 
-/// Format file metadata similar to `ls -l`
-/// Returns string with: permissions, links, uid, gid, size, time
 pub fn format_metadata(metadata: &Metadata) -> String {
     let file_type = if metadata.is_dir() {
         'd'
