@@ -3,12 +3,14 @@ pub mod cd;
 pub mod cp;
 pub mod help;
 pub mod ls;
+pub mod mkdir;
 
 pub use cat::*;
 pub use cd::*;
 pub use cp::*;
 pub use help::*;
 pub use ls::*;
+pub use mkdir::*;
 
 use std::io::{ self, Write };
 use std::env;
