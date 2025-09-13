@@ -5,6 +5,7 @@ pub mod help;
 pub mod ls;
 pub mod mkdir;
 pub mod mv;
+pub mod rm;
 
 pub use cat::*;
 pub use cd::*;
@@ -13,6 +14,7 @@ pub use help::*;
 pub use ls::*;
 pub use mkdir::*;
 pub use mv::*;
+pub use rm::*;
 
 use std::io::{ self, Write };
 use std::env;

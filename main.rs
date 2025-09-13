@@ -20,6 +20,7 @@ impl MiniShell {
         let mut command_map = HashMap::new();
 
         // Explicit type casting for consistent function pointer types
+        command_map.insert("rm", commands::rm as CommandFn);
         command_map.insert("mv", commands::mv as CommandFn);
         command_map.insert("mkdir", commands::mkdir as CommandFn);
         command_map.insert("ls", commands::ls as CommandFn);

@@ -2,7 +2,12 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
-// Command: Move/Rename
+/* todo:
+Moving a directory into itself (should error)
+Moving to a non-existent parent directory
+Permission issues
+*/
+
 pub fn mv(args: &[&str]) -> io::Result<()> {
     if args.len() != 2 {
         return Err(io::Error::new(io::ErrorKind::InvalidInput, "mv: missing or too many operands"));
@@ -24,6 +29,7 @@ pub fn mv(args: &[&str]) -> io::Result<()> {
     } else {
         dst.to_path_buf() // move/rename to the target path directly
     };
+    dbg!(&final_dst);
 
     if let Err(_) = fs::rename(src, &final_dst) {
         if src.is_file() {
