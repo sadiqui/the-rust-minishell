@@ -2,6 +2,7 @@ use std::io::{ self };
 use std::fs;
 use colored::Colorize;
 use std::path::Path;
+use std::os::unix::fs::PermissionsExt;
 
 pub fn ls(args: &[&str]) -> io::Result<()> {
     let mut paths = Vec::new();
@@ -13,7 +14,10 @@ pub fn ls(args: &[&str]) -> io::Result<()> {
         paths.push(".".to_string());
     }
 
-    for p in paths {
+    for p in &paths {
+        if paths.len() > 1 {
+            println!("{}:", p);
+        }
         let res = read_and_format_dir(Path::new(&p), &flg)?;
         for (i, f) in res.iter().enumerate() {
             if flg.l && i + 1 != res.len() {
@@ -31,14 +35,13 @@ pub fn ls(args: &[&str]) -> io::Result<()> {
 #[allow(non_snake_case)]
 struct Flags {
     a: bool,
-    t: bool,
     F: bool,
     l: bool,
 }
 
 impl Flags {
     fn new() -> Self {
-        Self { a: false, t: false, F: false, l: false }
+        Self { a: false, F: false, l: false }
     }
 }
 
@@ -47,9 +50,7 @@ fn parse(args: &[&str], flg: &mut Flags, paths: &mut Vec<String>) -> io::Result<
         if arg.starts_with('-') {
             let arg_flags = arg.trim_start_matches('-');
             for f in arg_flags.chars() {
-                if f == 't' {
-                    flg.t = true;
-                } else if f == 'F' {
+                if f == 'F' {
                     flg.F = true;
                 } else if f == 'l' {
                     flg.l = true;
@@ -80,7 +81,6 @@ fn parse(args: &[&str], flg: &mut Flags, paths: &mut Vec<String>) -> io::Result<
 
 fn read_and_format_dir(path: &Path, flg: &Flags) -> io::Result<Vec<String>> {
     let mut res = Vec::new();
-    // dbg!(&flg.l);
     match fs::read_dir(path) {
         Ok(entries) => {
             for entry in entries {
@@ -90,6 +90,7 @@ fn read_and_format_dir(path: &Path, flg: &Flags) -> io::Result<Vec<String>> {
                         if !flg.a && file_name.to_string_lossy().starts_with('.') {
                             continue;
                         }
+
                         let styled = if entry.file_type()?.is_dir() {
                             file_name.to_string_lossy().blue().bold().to_string()
                         } else if entry.file_type()?.is_file() {
@@ -97,14 +98,37 @@ fn read_and_format_dir(path: &Path, flg: &Flags) -> io::Result<Vec<String>> {
                         } else {
                             file_name.to_string_lossy().green().bold().to_string()
                         };
-                        if flg.l {
+
+                        let mut name = if flg.l {
                             let metadata = entry.metadata()?;
                             let meta_str = format_metadata(&metadata);
-                            let line = format!("{} {}", meta_str, styled);
-                            res.push(line);
+                            format!("{} {}", meta_str, styled)
                         } else {
-                            res.push(styled);
+                            styled
+                        };
+
+                        if flg.F {
+                            let ft = entry.file_type()?;
+                            if ft.is_dir() {
+                                name.push('/');
+                            } else if ft.is_symlink() {
+                                name.push('@');
+                            } else if ft.is_file() {
+                                let metadata = entry.metadata()?;
+                                if (metadata.permissions().mode() & 0o111) != 0 {
+                                    name.push('*');
+                                }
+                            } else {
+                                use std::os::unix::fs::FileTypeExt;
+                                if ft.is_socket() {
+                                    name.push('=');
+                                } else if ft.is_fifo() {
+                                    name.push('|');
+                                }
+                            }
                         }
+
+                        res.push(name);
                     }
                     Err(e) => eprintln!("Error reading entry: {}", e),
                 }
@@ -115,17 +139,6 @@ fn read_and_format_dir(path: &Path, flg: &Flags) -> io::Result<Vec<String>> {
 
     Ok(res)
 }
-
-/*
-Fields:
-File type + permissions (e.g. -rw-r--r--)
-Number of hard links (e.g. 1)
-Owner name (e.g. ahmed)
-Group name (e.g. users)
-File size (e.g. 1234)
-Last modified date (e.g. Sep 7 00:12)
-Filename (with symlink target if applicable)
-*/
 
 use std::fs::Metadata;
 use std::os::unix::fs::MetadataExt;
@@ -140,21 +153,13 @@ pub fn format_metadata(metadata: &Metadata) -> String {
         '-'
     };
 
-    // Permissions (mode & 0o777)
     let mode = metadata.mode();
     let perms = mode_to_string(mode);
-
-    // Number of hard links
     let nlink = metadata.nlink();
-
-    // Owner / group (numeric for now)
     let uid = metadata.uid();
     let gid = metadata.gid();
-
-    // File size
     let size = metadata.len();
 
-    // Modification time
     let modified = metadata.modified().unwrap_or(std::time::SystemTime::UNIX_EPOCH);
     let datetime: DateTime<Local> = modified.into();
     let time_str = datetime.format("%b %e %H:%M").to_string();
